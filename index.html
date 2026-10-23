@@ -216,13 +216,13 @@
         <select id="vacante" required>
           <option value="">Seleccione una vacante</option>
           <option value="OPERADOR CON AUTO">OPERADOR CON AUTO</option>
-          <option value="OPERADOR CON CAMIONETA LARGE VAN">OPERADOR CON CAMIONETA LARGE VAN</option>
-          <option value="OPERADOR CON CAMIONETA SMALL VAN">OPERADOR CON CAMIONETA SMALL VAN</option>
+          <option value="OPERADOR PARA CAMIONETA LARGE VAN">OPERADOR PARA CAMIONETA LARGE VAN</option>
+          <option value="OPERADOR PARA CAMIONETA SMALL VAN">OPERADOR PARA CAMIONETA SMALL VAN</option>
           <option value="OPERADOR CON MOTO">OPERADOR CON MOTO</option>
           <option value="OPERADOR PARA AUTO">OPERADOR PARA AUTO</option>
-          <option value="OPERADOR PARA CAMIONETA">OPERADOR PARA CAMIONETA</option>
           <option value="OPERADOR PARA MOTO">OPERADOR PARA MOTO</option>
           <option value="RECOLECTOR/PICKER">RECOLECTOR/PICKER</option>
+         <option value="AUXILIAR">AUXILIAR</option>
         </select>
       </div>
 
@@ -281,7 +281,7 @@
 
   <script>
     const supportNumbers = [
-      { number: '+525633940584', name: 'Reclutamiento' },
+      { number: '+525630283027', name: 'Reclutamiento' },
     ];
 
     // URL de la Web App de Apps Script (Code.gs de Vacantes). De aquí se leen los estados.
@@ -343,7 +343,7 @@
       };
     }
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
 
       const apellidoP = document.getElementById('apellidoP').value;
@@ -365,47 +365,29 @@
       const random = supportNumbers[Math.floor(Math.random() * supportNumbers.length)];
       const assignedTo = random.name;
 
-      try {
-        const response = await fetch('https://sheetdb.io/api/v1/94iczesssrp5n', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            apellidoP,
-            apellidoM,
-            nombre,
-            telefono,
-            correo,
-            vacante,
-            estado,
-            assignedTo,
-            documentacion: `Tiene: ${docs.tiene} | Le falta: ${docs.falta}`,
-            timestamp: new Date().toLocaleString("es-MX", { timeZone: "America/Mexico_City" })
-          })
-        });
+      // La solicitud NO se guarda en ninguna base de datos: solo se envía por WhatsApp.
+      const message =
+        `Hola ${assignedTo}, soy ${nombre} ${apellidoP} ${apellidoM}.\n` +
+        `📞 Tel: ${telefono}\n` +
+        `✉️ Correo: ${correo}\n` +
+        `📍 Estado: ${estado}\n` +
+        `💼 Vacante de interés: ${vacante}\n` +
+        `📄 Documentos a la mano: ${docs.tiene}\n` +
+        `⚠️ Me falta: ${docs.falta}`;
+      const encoded = encodeURIComponent(message);
+      const cleanedPhone = random.number.replace(/[^\d]/g, '');
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-        if (!response.ok) throw new Error('No se pudo enviar.');
+      statusDiv.innerHTML = `<div class="success">✅ Abriendo WhatsApp para enviar tu solicitud. Si no se abre, revisa que el navegador permita ventanas emergentes.</div>`;
 
-        statusDiv.innerHTML = `<div class="success">✅ Datos enviados correctamente. En un momento un agente se pondrá en contacto contigo.</div>`;
-
-        const message = `Hola ${assignedTo}, soy ${nombre} ${apellidoP} ${apellidoM}. 📞 Tel: ${telefono} Del Estado: ${estado} 💼 Mi Vacante de interés es: ${vacante}. 📄 Documentos a la mano: ${docs.tiene}. Me falta: ${docs.falta}`;
-        const encoded = encodeURIComponent(message);
-        const cleanedPhone = random.number.replace(/[^\d]/g, '');
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-        setTimeout(() => {
-          if (isMobile) {
-            window.location.href = `whatsapp://send?phone=${cleanedPhone}&text=${encoded}`;
-          } else {
-            window.open(`https://web.whatsapp.com/send?phone=${cleanedPhone}&text=${encoded}`, '_blank');
-          }
-        }, 1000);
-
-        form.reset();
-        actualizarTarjeta();
-      } catch (error) {
-        console.error(error);
-        statusDiv.innerHTML = `<div class="error">❌ Hubo un error al enviar el formulario.</div>`;
+      if (isMobile) {
+        window.location.href = `whatsapp://send?phone=${cleanedPhone}&text=${encoded}`;
+      } else {
+        window.open(`https://web.whatsapp.com/send?phone=${cleanedPhone}&text=${encoded}`, '_blank');
       }
+
+      form.reset();
+      actualizarTarjeta();
     });
   </script>
 </body>
