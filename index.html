@@ -216,15 +216,13 @@
         <select id="vacante" required>
           <option value="">Seleccione una vacante</option>
           <option value="OPERADOR CON AUTO">OPERADOR CON AUTO</option>
-          <option value="OPERADOR CON AUTO">OPERADOR PARA AUTO</option>
           <option value="OPERADOR CON CAMIONETA LARGE VAN">OPERADOR CON CAMIONETA LARGE VAN</option>
-          <option value="OPERADOR CON CAMIONETA LARGE VAN">OPERADOR PARA CAMIONETA LARGE VAN</option>
           <option value="OPERADOR CON CAMIONETA SMALL VAN">OPERADOR CON CAMIONETA SMALL VAN</option>
-          <option value="OPERADOR CON CAMIONETA SMALL VAN">OPERADOR PARA CAMIONETA SMALL VAN</option>
           <option value="OPERADOR CON MOTO">OPERADOR CON MOTO</option>
-          <option value="OPERADOR CON MOTO">OPERADOR PARA MOTO</option>
+          <option value="OPERADOR PARA AUTO">OPERADOR PARA AUTO</option>
+          <option value="OPERADOR PARA CAMIONETA">OPERADOR PARA CAMIONETA</option>
+          <option value="OPERADOR PARA MOTO">OPERADOR PARA MOTO</option>
           <option value="RECOLECTOR/PICKER">RECOLECTOR/PICKER</option>
-          <option value="RECOLECTOR/PICKER">AUXILIAR</option>
         </select>
       </div>
 
@@ -285,6 +283,31 @@
     const supportNumbers = [
       { number: '+525633940584', name: 'Reclutamiento' },
     ];
+
+    // URL de la Web App de Apps Script (Code.gs de Vacantes). De aquí se leen los estados.
+    // Pega la URL que termina en /exec. Si queda vacía o falla, se usa la lista fija del formulario.
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyqyLF9dyHfI0aIe4WzWgox1M-n9EHfcOoT1dxkvimhbJ1DCvUFtsCwwN_IeNRIskEb/exec';
+
+    const estadoSelect = document.getElementById('estado');
+
+    async function cargarEstados() {
+      if (!APPS_SCRIPT_URL.startsWith('https://')) return;
+      try {
+        const res = await fetch(APPS_SCRIPT_URL + '?accion=obtener_estados');
+        const data = await res.json();
+        if (!data.estados || !data.estados.length) return;
+        estadoSelect.innerHTML = '<option value="">Seleccione un estado</option>';
+        data.estados.forEach(function (nombre) {
+          const opt = document.createElement('option');
+          opt.value = nombre;
+          opt.textContent = nombre;
+          estadoSelect.appendChild(opt);
+        });
+      } catch (err) {
+        console.error('No se pudieron cargar los estados desde el Sheet:', err);
+      }
+    }
+    cargarEstados();
 
     const form = document.getElementById('problemForm');
     const statusDiv = document.getElementById('status');
